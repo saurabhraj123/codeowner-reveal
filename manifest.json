@@ -1,0 +1,16 @@
+{
+  "name": "Codeowner Reveal for GitHub",
+  "description": "Reveals codeowner of files on GitHub",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": ["https://github.com/*"],
+  "content_scripts": [
+    {
+      "js": ["scripts/content.js"],
+      "matches": ["https://github.com/*"]
+    }
+  ]
+}
