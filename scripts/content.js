@@ -3,8 +3,62 @@ let isObserving = false;
 let previousURL = null;
 
 // mutation observer initialization
-const handleSummaryPage = () => {
-  console.log("handleSummaryPage");
+const getElementWithCodeOwner = () => {
+  const element = document.createElement("div");
+  element.innerText = "@toddle-edu/frontend-team-3";
+  element.classList.add(
+    "text-mono",
+    "text-small",
+    "Link--primary",
+    "wb-break-all",
+    "mr-2"
+  );
+  element.dataset.ignoreMutation = "true"; // use this attribute wherever mutation has to be ignored
+  return element;
+};
+
+const handleSummaryPageLoad = (ele = document) => {
+  const reviewContainers = ele.querySelectorAll("div[id^='pullrequestreview'"); // id starts with pullrequestreview
+
+  if (reviewContainers.length) {
+    reviewContainers.forEach((reviewContainer) => {
+      const reviewContainers = reviewContainer.querySelectorAll("turbo-frame");
+      reviewContainers.forEach((reviewContainer) => {
+        const summaryEle = reviewContainer.querySelector("summary");
+        const element = getElementWithCodeOwner();
+        summaryEle.appendChild(element);
+      });
+    });
+  }
+};
+
+const handleSummaryPage = (mutations) => {
+  mutations.forEach((mutation) => {
+    if (mutation.type === "childList") {
+      mutation.addedNodes.forEach((node) => {
+        // if node is not element type or has ignoreMutation attribute, return
+        if (
+          node.nodeType !== 1 ||
+          node.dataset?.ignoreMutation === "true" ||
+          node.tagName === "IMG" ||
+          node.tagName === "A" ||
+          node.tagName === "SCRIPT"
+        )
+          return;
+
+        if (
+          node.nodeName === "TURBO-FRAME" &&
+          node.id.startsWith("review-thread-or-comment-id")
+        ) {
+          const summary = node.querySelector("summary");
+          const element = getElementWithCodeOwner();
+          summary.appendChild(element);
+        } else {
+          handleSummaryPageLoad(node);
+        }
+      });
+    }
+  });
 };
 
 const handleFilesPage = () => {
@@ -41,8 +95,6 @@ const startObserving = (message) => {
   const isFilesPage =
     url.includes("/pull/") && url.split("/").pop().startsWith("files");
 
-  console.log({ isComparePage, isSummaryPage, isFilesPage });
-
   if (!isComparePage && !isFilesPage && !isSummaryPage) return;
 
   const pageType = isComparePage
@@ -56,7 +108,7 @@ const startObserving = (message) => {
   const observerCallback = PAGE_HANDLER[pageType];
   observer = new MutationObserver(observerCallback);
 
-  const targetNode = document.body; // You can modify this to the specific node you want to observe
+  const targetNode = document.body;
   observer.observe(targetNode, observerConfig);
 
   isObserving = true;
@@ -71,9 +123,11 @@ const stopObserving = () => {
 // ============== Content script related code ===================
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const url = message.url;
-  console.log({ url });
 
   if (previousURL === url) return;
+
+  handleSummaryPageLoad();
+
   previousURL = url;
 
   const isBranchPage = url.includes("/pull/") || url.includes("/compare/");
@@ -82,6 +136,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (!isBranchPage) {
     stopObserving();
   }
-
-  console.log("Received message from background:", message);
 });
