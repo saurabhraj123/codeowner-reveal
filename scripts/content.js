@@ -6,13 +6,7 @@ let previousURL = null;
 const getElementWithCodeOwner = () => {
   const element = document.createElement("div");
   element.innerText = "@toddle-edu/frontend-team-3";
-  element.classList.add(
-    "text-mono",
-    "text-small",
-    "Link--primary",
-    "wb-break-all",
-    "mr-2"
-  );
+  element.classList.add("text-mono", "text-small", "wb-break-all", "mr-2");
   element.dataset.ignoreMutation = "true"; // use this attribute wherever mutation has to be ignored
   return element;
 };
@@ -65,14 +59,53 @@ const handleFilesPage = () => {
   console.log("handleFilesPage");
 };
 
-const handleComparePage = () => {
-  console.log("handleComparePage");
+const handleComparePage = (mutations) => {
+  mutations.forEach((mutation) => {
+    if (mutation.type === "childList") {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === 1 && node.dataset?.ignoreMutation !== "true") {
+          const headers = node.querySelectorAll(".file-header");
+          headers.forEach((container) => {
+            const fileInfoEle = container.querySelector(".file-info");
+            const element = getElementWithCodeOwner();
+
+            // Create a wrapper div with flex-direction column
+            const wrapperDiv = document.createElement("div");
+            wrapperDiv.style.display = "flex";
+            wrapperDiv.style.flexDirection = "column";
+            wrapperDiv.style.flex = 1;
+
+            console.log({ container, fileInfoEle });
+
+            if (fileInfoEle) {
+              container.replaceChild(wrapperDiv, fileInfoEle);
+              wrapperDiv.appendChild(fileInfoEle);
+              wrapperDiv.appendChild(element);
+            }
+          });
+        }
+      });
+    }
+  });
+  //   console.log("handleComparePage");
+  //   const containers = document.querySelectorAll("copilot-diff-entry");
+  //   console.log(containers);
+  //   containers.forEach((container) => {
+  //     const element = getElementWithCodeOwner();
+  //     container.appendChild(element);
+  //   });
 };
 
-const PAGE_HANDLER = {
+const MUTATION_HANDLER = {
   SUMMARY: handleSummaryPage,
   FILES: handleFilesPage,
   COMPARE: handleComparePage,
+};
+
+const PAGE_LOAD_HANDLER = {
+  SUMMARY: handleSummaryPageLoad,
+  FILES: handleFilesPage,
+  COMPARE: () => {},
 };
 
 let observer;
@@ -105,7 +138,9 @@ const startObserving = (message) => {
 
   console.log("observing", pageType);
 
-  const observerCallback = PAGE_HANDLER[pageType];
+  PAGE_LOAD_HANDLER[pageType]();
+
+  const observerCallback = MUTATION_HANDLER[pageType];
   observer = new MutationObserver(observerCallback);
 
   const targetNode = document.body;
@@ -125,8 +160,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const url = message.url;
 
   if (previousURL === url) return;
-
-  handleSummaryPageLoad();
 
   previousURL = url;
 
