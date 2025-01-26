@@ -1,0 +1,74 @@
+/* Reset basic styles */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  color: #333;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: white;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  text-align: center;
+  width: 400px;
+}
+
+h1 {
+  font-size: 20px;
+  margin: 2px 0 0;
+  color: #333;
+  font-weight: bold;
+}
+
+textarea {
+  width: calc(100% - 24px);
+  height: 150px;
+  padding: 10px;
+  font-size: 14px;
+  border: 2px solid #4facfe;
+  border-radius: 5px;
+  outline: none;
+  resize: none;
+  transition: border-color 0.3s;
+}
+
+textarea:focus {
+  border-color: #00f2fe;
+}
+
+button {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  color: white;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #00f2fe, #4facfe);
+  transform: scale(1.05);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+button:disabled {
+  background-color: #d3d3d3;
+  color: #7a7a7a;
+  cursor: not-allowed;
+  border: none;
+  font-family: Arial, sans-serif;
+  font-weight: normal;
+}
