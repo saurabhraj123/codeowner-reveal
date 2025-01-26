@@ -6,7 +6,7 @@ let previousURL = null;
 const getElementWithCodeOwner = () => {
   const element = document.createElement("div");
   element.innerText = "@toddle-edu/frontend-team-3";
-  element.classList.add("text-mono", "text-small", "wb-break-all", "mr-2");
+  element.classList.add("text-mono", "text-small", "wb-break-all");
   element.dataset.ignoreMutation = "true"; // use this attribute wherever mutation has to be ignored
   return element;
 };
@@ -55,8 +55,23 @@ const handleSummaryPage = (mutations) => {
   });
 };
 
-const handleFilesPage = () => {
-  console.log("handleFilesPage");
+const updateFileHeader = (node = document) => {
+  const headers = node.querySelectorAll(".file-header");
+  headers.forEach((container) => {
+    const fileInfoEle = container.querySelector(".file-info");
+    const element = getElementWithCodeOwner();
+
+    const wrapperDiv = document.createElement("div");
+    wrapperDiv.style.display = "flex";
+    wrapperDiv.style.flexDirection = "column";
+    wrapperDiv.style.flex = 1;
+
+    if (fileInfoEle) {
+      container.replaceChild(wrapperDiv, fileInfoEle);
+      wrapperDiv.appendChild(fileInfoEle);
+      wrapperDiv.appendChild(element);
+    }
+  });
 };
 
 const handleComparePage = (mutations) => {
@@ -64,47 +79,22 @@ const handleComparePage = (mutations) => {
     if (mutation.type === "childList") {
       mutation.addedNodes.forEach((node) => {
         if (node.nodeType === 1 && node.dataset?.ignoreMutation !== "true") {
-          const headers = node.querySelectorAll(".file-header");
-          headers.forEach((container) => {
-            const fileInfoEle = container.querySelector(".file-info");
-            const element = getElementWithCodeOwner();
-
-            // Create a wrapper div with flex-direction column
-            const wrapperDiv = document.createElement("div");
-            wrapperDiv.style.display = "flex";
-            wrapperDiv.style.flexDirection = "column";
-            wrapperDiv.style.flex = 1;
-
-            console.log({ container, fileInfoEle });
-
-            if (fileInfoEle) {
-              container.replaceChild(wrapperDiv, fileInfoEle);
-              wrapperDiv.appendChild(fileInfoEle);
-              wrapperDiv.appendChild(element);
-            }
-          });
+          updateFileHeader(node);
         }
       });
     }
   });
-  //   console.log("handleComparePage");
-  //   const containers = document.querySelectorAll("copilot-diff-entry");
-  //   console.log(containers);
-  //   containers.forEach((container) => {
-  //     const element = getElementWithCodeOwner();
-  //     container.appendChild(element);
-  //   });
 };
 
 const MUTATION_HANDLER = {
   SUMMARY: handleSummaryPage,
-  FILES: handleFilesPage,
+  FILES: handleComparePage,
   COMPARE: handleComparePage,
 };
 
 const PAGE_LOAD_HANDLER = {
   SUMMARY: handleSummaryPageLoad,
-  FILES: handleFilesPage,
+  FILES: updateFileHeader,
   COMPARE: () => {},
 };
 
