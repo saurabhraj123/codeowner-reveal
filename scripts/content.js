@@ -88,50 +88,6 @@ const getElementWithCodeOwner = (filePath = "") => {
   return element;
 };
 
-const handleSummaryPageLoad = (ele = document) => {
-  const reviewContainers = ele.querySelectorAll("div[id^='pullrequestreview'"); // id starts with pullrequestreview
-
-  if (reviewContainers.length) {
-    reviewContainers.forEach((reviewContainer) => {
-      const reviewContainers = reviewContainer.querySelectorAll("turbo-frame");
-      reviewContainers.forEach((reviewContainer) => {
-        const summaryEle = reviewContainer.querySelector("summary");
-        const element = getElementWithCodeOwner();
-        summaryEle.appendChild(element);
-      });
-    });
-  }
-};
-
-const handleSummaryPage = (mutations) => {
-  mutations.forEach((mutation) => {
-    if (mutation.type === "childList") {
-      mutation.addedNodes.forEach((node) => {
-        // if node is not element type or has ignoreMutation attribute, return
-        if (
-          node.nodeType !== 1 ||
-          node.dataset?.ignoreMutation === "true" ||
-          node.tagName === "IMG" ||
-          node.tagName === "A" ||
-          node.tagName === "SCRIPT"
-        )
-          return;
-
-        if (
-          node.nodeName === "TURBO-FRAME" &&
-          node.id.startsWith("review-thread-or-comment-id")
-        ) {
-          const summary = node.querySelector("summary");
-          const element = getElementWithCodeOwner();
-          summary.appendChild(element);
-        } else {
-          handleSummaryPageLoad(node);
-        }
-      });
-    }
-  });
-};
-
 const updateFileHeader = (node = document) => {
   const headers = node.querySelectorAll(".file-header");
   headers.forEach((header) => {
@@ -165,13 +121,11 @@ const handleComparePage = (mutations) => {
 };
 
 const MUTATION_HANDLER = {
-  SUMMARY: handleSummaryPage,
   FILES: handleComparePage,
   COMPARE: handleComparePage,
 };
 
 const PAGE_LOAD_HANDLER = {
-  SUMMARY: handleSummaryPageLoad,
   FILES: updateFileHeader,
   COMPARE: () => {},
 };
@@ -192,18 +146,13 @@ const startObserving = (message) => {
 
   const url = message.url;
   const isComparePage = url.includes("/compare/");
-  const isSummaryPage = url.split("/").slice(-2, -1)[0] === "pull";
   const isFilesPage = url.includes("/pull/") && url.includes("files");
 
   if (!isComparePage && !isFilesPage && !isSummaryPage) return;
 
-  const pageType = isComparePage
-    ? "COMPARE"
-    : isFilesPage
-    ? "FILES"
-    : "SUMMARY";
+  const pageType = isComparePage ? "COMPARE" : isFilesPage ? "FILES" : null;
 
-  console.log("observing", pageType);
+  if (!pageType) return;
 
   PAGE_LOAD_HANDLER[pageType]();
 
@@ -218,7 +167,6 @@ const startObserving = (message) => {
 
 const stopObserving = () => {
   observer.disconnect();
-  console.log("MutationObserver stopped");
   isObserving = false;
 };
 
